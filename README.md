@@ -1,53 +1,131 @@
-# php-single-app-with-js
+# SPA Content Loader with Dynamic Script Execution
 
-A usabilidade deste código é voltada para melhorar a experiência do usuário em uma aplicação de página única (SPA), onde o conteúdo da página é carregado dinamicamente sem recarregar toda a página. Ele visa implementar uma navegação que mantém o comportamento interativo (como modais, tooltips e outros componentes JS) após a atualização do conteúdo.
-Função Principal:
+This JavaScript code snippet provides a **Single Page Application (SPA)** like behavior to your website by enabling **AJAX-based content loading** without reloading the entire page. It dynamically fetches content, updates the DOM, and ensures that the interactive components (like tooltips, modals, etc.) continue to work after the content has been replaced.
 
-O código intercepta cliques em links da página, realiza uma requisição AJAX (GET) para carregar o conteúdo de uma nova URL e substitui o conteúdo da página com o resultado. Durante esse processo, o código mantém a navegação fluida e interativa ao garantir que os scripts e componentes dinâmicos da página (como tooltips, modais, etc.) sejam recarregados corretamente após a atualização.
-Usabilidade e Benefícios:
+## Features
 
-    Carregamento Dinâmico de Conteúdo:
-        Ao clicar em um link, a página não é recarregada completamente. Em vez disso, o conteúdo específico é carregado via AJAX e substituído na página.
-        Isso melhora a performance da aplicação, já que apenas uma parte do conteúdo é atualizada, e o resto da página permanece intacto, criando uma experiência mais rápida e fluída.
+- **Dynamic Content Loading**: Load only the specific part of the page instead of the whole page, making the app feel faster and more responsive.
+- **AJAX Navigation**: Replace page content by fetching new HTML content without reloading the entire page.
+- **History Management**: Update the browser’s history state to reflect the new URL while staying on the same page.
+- **Interactive Components**: Reinitialize interactive components (like Bootstrap tooltips) after content is updated.
+- **Loading Indicator**: Show a loading spinner while the content is being fetched and hide it when the content is loaded.
 
-    Comportamento Semelhante ao de uma Navegação Tradicional:
-        O código mantém a URL da página atualizada com window.history.pushState(), permitindo que o usuário compartilhe a URL diretamente, e a navegação pelo histórico do navegador funcione como em uma aplicação tradicional.
-        A resposta da requisição é manipulada para substituir apenas o conteúdo da div identificada como #single-page-content, o que significa que o layout e os estilos de outras áreas da página permanecem inalterados.
+## How It Works
 
-    Exibição de Carregamento Durante a Requisição:
-        O código mostra um ícone de carregamento enquanto a requisição AJAX está em andamento. Isso melhora a UX (experiência do usuário) ao informar que o conteúdo está sendo carregado.
-        A função showLoading() exibe o indicador de carregamento e hideLoading() o oculta após o carregamento ser concluído.
+1. **Intercept Clicks on Links**: 
+   - The script listens for click events on all links (`<a>` tags) and intercepts the default behavior to handle AJAX navigation.
+   - It ensures that only links leading to valid URLs (not JavaScript links, empty links, or anchor links) are processed.
 
-    Recarregamento de Scripts Dinâmicos:
-        O conteúdo carregado via AJAX pode conter scripts que precisam ser executados para garantir que o comportamento da página seja o esperado. A função refreshDOM() trata de reativar os scripts presentes no novo conteúdo.
-        Os scripts são reativados de forma assíncrona (usando Promise.all()), garantindo que todos os scripts sejam executados antes de reinicializar componentes interativos como tooltips do Bootstrap.
+2. **AJAX Request**:
+   - When a valid link is clicked, an AJAX `GET` request is made to the URL.
+   - Upon success, the script fetches the content and extracts the new content from a specific container (`#single-page-content`).
 
-    Manutenção da Interatividade da Página:
-        Após a atualização do conteúdo, o código garante que os tooltips, popovers, modais e outros componentes interativos, que dependem de bibliotecas JS como o Bootstrap, sejam reativados automaticamente. Isso significa que o comportamento de interação (como a exibição de tooltips ao passar o mouse) continua funcionando sem problemas após o carregamento do conteúdo.
+3. **Content Replacement**:
+   - The new content is used to replace the existing content inside the `#single-page-content` div.
+   - All `<script>` tags from the new content are re-executed to ensure that any interactive features (e.g., tooltips, modals) continue to work.
 
-    Tratamento de Erros:
-        Caso a requisição falhe (se a resposta do servidor não for bem-sucedida), um erro é mostrado no console. Isso ajuda a identificar problemas na requisição, como erros de servidor ou problemas de rede.
+4. **Loading Indicator**:
+   - While the request is being processed, a loading indicator is displayed. The indicator is hidden once the content has been fully loaded.
 
-    Reinicialização de Componentes Interativos:
-        O código inclui uma reinicialização específica de componentes Bootstrap (tooltip) após os scripts serem recarregados, garantindo que as funcionalidades de UI (interface do usuário), como tooltips e popovers, sejam restauradas corretamente.
+5. **History Management**:
+   - The browser’s history is updated with the new URL, making it possible to bookmark or share the current page state.
+   - The "Back" button in the browser triggers a page reload to reset the application state.
 
-    Comportamento no Histórico do Navegador:
-        Quando o usuário navega para uma nova URL e depois clica no botão de "voltar", a função popstate é disparada, recarregando a página. Isso simula um comportamento tradicional de navegação, mas sem a necessidade de recarregar toda a página.
+## Code Explanation
 
-Vantagens de Usabilidade:
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (event) => {
+        const target = event.target.closest('a');
+        if (!target) return;
 
-    Desempenho Melhorado: Apenas a parte necessária da página é carregada e substituída, sem recarregar o conteúdo inteiro da página.
-    Interface Fluida: O código permite que a navegação se torne mais rápida e parecida com a de uma aplicação de página única, mantendo o estado da URL.
-    Manutenção de Funcionalidades Dinâmicas: Tooltips, modais e outros componentes interativos continuam funcionando após a troca de conteúdo, mantendo a interatividade sem precisar recarregar a página completamente.
-    Experiência do Usuário Aprimorada: O carregamento de conteúdo é sinalizado para o usuário, melhorando a UX e prevenindo que o usuário fique confuso sobre o estado da aplicação.
-    Consistência: O uso do window.history.pushState() e a atualização da URL ajudam a manter a aplicação consistente, permitindo que o conteúdo carregado via AJAX seja compartilhado e acessado diretamente.
+        const href = target.getAttribute('href');
+        if (
+            href &&
+            !href.startsWith('javascript:') &&
+            href !== '#' &&
+            !href.startsWith('#')
+        ) {
+            event.preventDefault();
 
-Possíveis Melhorias:
+            showLoading();
 
-    Tratamento de Erros Mais Robusto: Embora os erros sejam logados no console, o usuário não recebe feedback visível sobre a falha na requisição. Pode-se adicionar uma notificação ou mensagem de erro amigável na UI.
-    Aprimorar a Reatividade com Outros Componentes: Dependendo dos requisitos, mais componentes interativos (como carrosséis, sliders, etc.) podem ser incluídos na reinicialização após o carregamento do conteúdo.
-    Gestão de Estado: Em aplicativos maiores, pode ser interessante integrar um gerenciador de estado (como Redux, Vuex ou outro) para controlar melhor o estado da aplicação durante as trocas de conteúdo.
+            // Perform GET request for the URL
+            fetch(target.href, { method: 'GET' })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Error loading page.');
+                    }
+                    return response.text();
+                })
+                .then((html) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.querySelector('#single-page-content');
 
-Resumo:
+                    if (newContent) {
+                        const currentContent = document.querySelector('#single-page-content');
+                        if (currentContent) {
+                            currentContent.replaceWith(newContent);
 
-Esse código é uma implementação eficaz de carregamento dinâmico de conteúdo com navegação fluida, mantendo a interatividade e funcionalidade da página ao recarregar apenas o conteúdo necessário, sem perder o comportamento esperado de uma aplicação tradicional. Ele permite uma navegação rápida e consistente, mantendo o histórico da página e garantindo a execução correta de scripts após cada atualização.
+                            refreshDOM(newContent);
+
+                            window.history.pushState({}, '', target.href);
+                        }
+                    } else {
+                        console.error('Error: #single-page-content div not found in response.');
+                    }
+                })
+                .catch((error) => {
+                    console.error(error.message);
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        location.reload();
+    });
+
+    function showLoading() {
+        const loader = document.getElementById('body-loading');
+        if (loader) loader.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const loader = document.getElementById('body-loading');
+        if (loader) loader.style.display = 'none';
+    }
+
+    function refreshDOM(container) {
+        const scripts = container.querySelectorAll('script');
+
+        // Promises to ensure script execution
+        const scriptPromises = Array.from(scripts).map((script) => {
+            return new Promise((resolve) => {
+                const newScript = document.createElement('script');
+                newScript.src = script.src || '';
+                newScript.textContent = script.textContent || '';
+                newScript.async = script.async || false;
+                newScript.defer = script.defer || false;
+
+                newScript.onload = resolve;
+                newScript.onerror = () => resolve(); // Ensure errors don't block execution
+
+                document.body.appendChild(newScript);
+            });
+        });
+
+        // Wait for all scripts to load
+        Promise.all(scriptPromises).then(() => {
+            // Reinitialize Bootstrap tooltips or other components
+            if (window.$ && typeof $.fn.tooltip === 'function') {
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            }
+
+            // Add any additional reintegration of libraries or events as needed
+        });
+    }
+});
